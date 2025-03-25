@@ -1,6 +1,7 @@
 import os
 import csv
 import subprocess
+import platform
 from typing import Callable
 
 # Funções de área
@@ -117,19 +118,49 @@ def call_statistics_program():
     else:
         print("Executando calculadora estatística em R...")
         try:
-            subprocess.run([
-                "Rscript",
-                "calculadora_estatistica.R"
-            ], check=True)
+            r_script = "calculadora_estatistica.R"
+            if platform.system() == "Windows":
+                # Try to find Rscript.exe in common installation paths
+                r_paths = [
+                    r"C:\Program Files\R\R-4.2.0\bin\Rscript.exe",
+                    r"C:\Program Files\R\R-4.1.0\bin\Rscript.exe",
+                    r"C:\Program Files\R\R-4.0.0\bin\Rscript.exe"
+                ]
+                rscript_path = None
+                for path in r_paths:
+                    if os.path.exists(path):
+                        rscript_path = path
+                        break
+                if rscript_path is None:
+                    print("Erro: Não foi possível encontrar o Rscript.exe. Certifique-se de que o R está instalado.")
+                    return
+                subprocess.run([rscript_path, r_script], check=True)
+            else:
+                subprocess.run(["Rscript", r_script], check=True)
         except Exception as e:
             print("Erro ao executar o script R:", e)
 
 def call_wether_program():
     try:
-        subprocess.run([
-            "Rscript",
-            "api_clima.R"
-        ], check=True)
+        r_script = "api_clima.R"
+        if platform.system() == "Windows":
+            # Try to find Rscript.exe in common installation paths
+            r_paths = [
+                r"C:\Program Files\R\R-4.2.0\bin\Rscript.exe",
+                r"C:\Program Files\R\R-4.1.0\bin\Rscript.exe",
+                r"C:\Program Files\R\R-4.0.0\bin\Rscript.exe"
+            ]
+            rscript_path = None
+            for path in r_paths:
+                if os.path.exists(path):
+                    rscript_path = path
+                    break
+            if rscript_path is None:
+                print("Erro: Não foi possível encontrar o Rscript.exe. Certifique-se de que o R está instalado.")
+                return
+            subprocess.run([rscript_path, r_script], check=True)
+        else:
+            subprocess.run(["Rscript", r_script], check=True)
     except Exception as e:
         print("Erro ao executar o script R:", e)
 

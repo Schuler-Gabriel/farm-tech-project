@@ -16,7 +16,7 @@ install_if_missing <- function(packages) {
 }
 
 # Install and load required libraries
-install_if_missing(c("httr", "jsonlite"))
+install_if_missing(c("httr", "jsonlite", "lubridate"))
 
 # Function to get weather data for São Paulo
 get_weather_data <- function() {
@@ -43,25 +43,36 @@ tryCatch({
   # Get weather data
   weather_data <- get_weather_data()
   
-  # Get current hour index (1-based in R)
-  current_hour <- as.numeric(format(Sys.time(), "%H")) + 1
+  # Get current time in São Paulo timezone
+  current_time_sp <- force_tz(Sys.time(), "America/Sao_Paulo")
   
-  # Extract temperature and time for the current hour
-  current_temp <- weather_data$hourly$temperature_2m[current_hour]
-  current_time <- weather_data$hourly$time[current_hour]
+  # Convert API timestamps to POSIXct objects in São Paulo timezone
+  api_times <- ymd_hm(weather_data$hourly$time, tz = "America/Sao_Paulo")
   
-  # Get min and max temperature for today
-  today_temps <- weather_data$hourly$temperature_2m[1:24]
+  # Find the closest time for temperature data
+  time_diffs <- abs(as.numeric(difftime(api_times, current_time_sp, units = "hours")))
+  closest_index <- which.min(time_diffs)
+  
+  # Extract temperature from the closest hour
+  current_temp <- weather_data$hourly$temperature_2m[closest_index]
+  
+  # Get today's date at midnight in São Paulo time
+  today_start <- as.POSIXct(format(current_time_sp, "%Y-%m-%d 00:00:00"), tz = "America/Sao_Paulo")
+  today_end <- today_start + days(1) - seconds(1)
+  
+  # Get temperatures for today
+  today_indices <- which(api_times >= today_start & api_times <= today_end)
+  today_temps <- weather_data$hourly$temperature_2m[today_indices]
   min_temp <- min(today_temps)
   max_temp <- max(today_temps)
   
   # Display weather information in the terminal
   cat("\n===== Clima em São Paulo =====\n")
-  cat("Data e Hora:", format(as.POSIXct(current_time), "%d/%m/%Y %H:%M"), "\n")
+  cat("Data e Hora:", format(current_time_sp, "%d/%m/%Y %H:%M"), "\n")
   cat("Temperatura Atual:", round(current_temp, 1), "°C\n")
   cat("Temperatura Mínima Hoje:", round(min_temp, 1), "°C\n")
   cat("Temperatura Máxima Hoje:", round(max_temp, 1), "°C\n")
-
+  
 }, error = function(e) {
   cat("Erro:", e$message, "\n")
 })
