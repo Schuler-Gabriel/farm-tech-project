@@ -1,28 +1,38 @@
+"""
+Sistema de Calculadora Agrícola FarmTech Solutions
+Versão: 1.0
+"""
+
 import os
 import csv
 import subprocess
 import platform
 from typing import Callable
 
-# Funções de área
+# Cálculos de área
 def area_of_circle(radius: float) -> float:
+    """Calcula área do terreno circular"""
     return 3.14159 * (radius ** 2)
 
 def area_of_rectangle(length: float, width: float) -> float:
+    """Calcula área do terreno retangular"""
     return length * width
 
 def area_of_square(side: float) -> float:
+    """Calcula área do terreno quadrado"""
     return side ** 2
 
-# Funções de sementes
+# Cálculos de sementes
 def corn_seeds_amount(area: float) -> float:
+    """Calcula quantidade de sementes de milho (7.32 sementes/m²)"""
     return area * 7.32
 
 def soy_seeds_amount(area: float) -> float:
+    """Calcula quantidade de sementes de soja (30.0 sementes/m²)"""
     return area * 30.0
 
-# Função para registrar várias áreas com a cultura no CSV
-def registrar_area_csv(area, cultura):
+def registrar_area_csv(area: float, cultura: str) -> None:
+    """Registra área e cultura no arquivo CSV"""
     arquivo = "todas_areas.csv"
     existe = os.path.isfile(arquivo)
     
@@ -32,8 +42,8 @@ def registrar_area_csv(area, cultura):
             writer.writerow(["Cultura", "Area"])
         writer.writerow([cultura, area])
 
-# Função de cálculo de insumos por cultura
-def agricultural_culture(area: float, exit: Callable, home: Callable):
+def agricultural_culture(area: float, exit: Callable, home: Callable) -> None:
+    """Menu de seleção de cultura e cálculo de sementes"""
     os.system('cls' if os.name == 'nt' else 'clear')
     print("===== Calculadora de insumos ===== \n")
     print("Escolha a cultura a ser plantada:\n")
@@ -64,8 +74,8 @@ def agricultural_culture(area: float, exit: Callable, home: Callable):
     else:    
         print("Opção inválida. Por favor, tente novamente \n")
 
-# Programa da calculadora de insumos
-def agricultural_program(exit: Callable):
+def agricultural_program(exit: Callable) -> None:
+    """Menu principal do programa de cálculo de insumos"""
     is_agricultural_program_active = True
     while is_agricultural_program_active == True:
         os.system('cls' if os.name == 'nt' else 'clear')
@@ -111,8 +121,8 @@ def agricultural_program(exit: Callable):
         else:
             print("Opção inválida. Por favor, tente novamente.")
 
-
-def call_statistics_program():
+def call_statistics_program() -> None:
+    """Executa análise estatística usando R"""
     if not os.path.isfile("todas_areas.csv"):
         print("\nAntes de exibir os dados é necessario fornecer os dados a calculadora de insumos.\n")
     else:
@@ -120,7 +130,7 @@ def call_statistics_program():
         try:
             r_script = "calculadora_estatistica.R"
             if platform.system() == "Windows":
-                # Try to find Rscript.exe in common installation paths
+                # Busca Rscript.exe
                 r_paths = [
                     r"C:\Program Files\R\R-4.2.0\bin\Rscript.exe",
                     r"C:\Program Files\R\R-4.1.0\bin\Rscript.exe",
@@ -140,11 +150,12 @@ def call_statistics_program():
         except Exception as e:
             print("Erro ao executar o script R:", e)
 
-def call_wether_program():
+def call_wether_program() -> None:
+    """Executa análise climatológica usando R"""
     try:
         r_script = "api_clima.R"
         if platform.system() == "Windows":
-            # Try to find Rscript.exe in common installation paths
+            # Busca Rscript.exe
             r_paths = [
                 r"C:\Program Files\R\R-4.2.0\bin\Rscript.exe",
                 r"C:\Program Files\R\R-4.1.0\bin\Rscript.exe",
@@ -164,7 +175,7 @@ def call_wether_program():
     except Exception as e:
         print("Erro ao executar o script R:", e)
 
-# Loop do programa principal
+# Loop principal
 is_global_program_active = True
 while is_global_program_active == True:
     print("\n===== Bem vindo à calculadora da Startup FarmTech Solutions ===== \n")

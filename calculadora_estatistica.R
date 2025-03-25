@@ -1,30 +1,33 @@
-# Ler dados do CSV
+# Análise Estatística - FarmTech Solutions
+# Gera estatísticas e gráficos das áreas por cultura
+# Versão: 1.0
+
+# Leitura de dados
 dados <- read.csv("todas_areas.csv", header = TRUE, sep = ",")
 
-# Converter para numérico
+# Preparação dos dados
 dados$Area <- as.numeric(dados$Area)
 
-# Verificar se há valores inválidos
+# Validações
 if (any(is.na(dados$Area))) {
   cat("Erro: A coluna 'Area' contém valores inválidos ou não numéricos.\n")
   quit(status = 1)
 }
 
-# Verificar se há dados suficientes
 if (nrow(dados) == 0) {
   cat("Erro: Não há dados no arquivo CSV.\n")
   quit(status = 1)
 }
 
-# Obter culturas únicas
+# Análise por cultura
 culturas <- unique(dados$Cultura)
 
 cat("\n===== Estatísticas das Áreas por Cultura =====\n")
 
-# Criar dataframe para gráfico
+# Preparação para visualização
 estatisticas <- data.frame(Cultura = character(), Media = numeric(), Desvio = numeric())
 
-# Loop por cultura
+# Cálculo de estatísticas
 for (cultura in culturas) {
   cat("\nCultura:", cultura, "\n")
   dados_filtrados <- subset(dados, Cultura == cultura)
@@ -32,7 +35,7 @@ for (cultura in culturas) {
   if (nrow(dados_filtrados) > 0) {
     media <- mean(dados_filtrados$Area, na.rm = TRUE)
     desvio <- sd(dados_filtrados$Area, na.rm = TRUE)
-    if (is.na(desvio)) desvio <- 0  # Handle single value case
+    if (is.na(desvio)) desvio <- 0  # Caso único valor
     maior <- max(dados_filtrados$Area, na.rm = TRUE)
     menor <- min(dados_filtrados$Area, na.rm = TRUE)
     total <- nrow(dados_filtrados)
@@ -49,12 +52,13 @@ for (cultura in culturas) {
   }
 }
 
-# Modificar a parte do gráfico
+# Geração do gráfico
 if (nrow(estatisticas) > 0) {
-  # Calcular ylim de forma segura
+  # Cálculo de limites
   max_value <- max(estatisticas$Media + estatisticas$Desvio)
   ylim_max <- if (is.finite(max_value)) max_value * 1.2 else max(estatisticas$Media) * 1.2
-  # Gerar gráfico com barras
+  
+  # Plotagem
   bar_centers <- barplot(
     estatisticas$Media,
     names.arg = estatisticas$Cultura,
@@ -65,7 +69,7 @@ if (nrow(estatisticas) > 0) {
     ylim = c(0, ylim_max)
   )
   
-  # Adicionar barras de erro apenas quando o desvio padrão não é zero
+  # Barras de erro
   for (i in 1:length(bar_centers)) {
     if (estatisticas$Desvio[i] > 0) {
       arrows(

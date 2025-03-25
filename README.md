@@ -1,2 +1,0 @@
-# farm-tech-project
- 
