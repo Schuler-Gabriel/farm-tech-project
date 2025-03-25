@@ -138,8 +138,8 @@ is_global_program_active = True
 while is_global_program_active == True:
     print("\n===== Bem vindo à calculadora da Startup FarmTech Solutions ===== \n")
     print("Selecione a opção desejada:")
-    print("1. Calculadora de insumos")
-    print("2. Calculadora estatística")
+    print("1. Calcular insumos")
+    print("2. Gerar estatísticas")
     print("3. Climatologia")
     print("4. Sair")
 

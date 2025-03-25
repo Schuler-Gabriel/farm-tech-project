@@ -10,6 +10,12 @@ if (any(is.na(dados$Area))) {
   quit(status = 1)
 }
 
+# Verificar se há dados suficientes
+if (nrow(dados) == 0) {
+  cat("Erro: Não há dados no arquivo CSV.\n")
+  quit(status = 1)
+}
+
 # Obter culturas únicas
 culturas <- unique(dados$Cultura)
 
@@ -26,11 +32,11 @@ for (cultura in culturas) {
   if (nrow(dados_filtrados) > 0) {
     media <- mean(dados_filtrados$Area, na.rm = TRUE)
     desvio <- sd(dados_filtrados$Area, na.rm = TRUE)
+    if (is.na(desvio)) desvio <- 0  # Handle single value case
     maior <- max(dados_filtrados$Area, na.rm = TRUE)
     menor <- min(dados_filtrados$Area, na.rm = TRUE)
     total <- nrow(dados_filtrados)
     
-    # cat para fazer o terminal ficar visualmente mais bonito
     cat(" - Total de áreas:", total, "\n")
     cat(" - Média da área:", round(media, 2), "m²\n")
     cat(" - Desvio padrão:", round(desvio, 2), "m²\n")
@@ -43,11 +49,12 @@ for (cultura in culturas) {
   }
 }
 
-# Verificar se há dados para o gráfico
+# Modificar a parte do gráfico
 if (nrow(estatisticas) > 0) {
-  cat("Cheque o gráfico gerado no arquivo Rplot.pdf.\n")
-  
-  # Gerar gráfico com barras e desvios padrão
+  # Calcular ylim de forma segura
+  max_value <- max(estatisticas$Media + estatisticas$Desvio)
+  ylim_max <- if (is.finite(max_value)) max_value * 1.2 else max(estatisticas$Media) * 1.2
+  # Gerar gráfico com barras
   bar_centers <- barplot(
     estatisticas$Media,
     names.arg = estatisticas$Cultura,
@@ -55,20 +62,26 @@ if (nrow(estatisticas) > 0) {
     main = "Média da Área por Cultura (com Desvio Padrão)",
     xlab = "Cultura",
     ylab = "Área média (m²)",
-    ylim = c(0, max(estatisticas$Media + estatisticas$Desvio, na.rm = TRUE) * 1.2) # Ajustar o limite do eixo Y
+    ylim = c(0, ylim_max)
   )
   
-  # Adicionar barras de erro (desvio padrão)
-  arrows(
-    x0 = bar_centers, 
-    y0 = estatisticas$Media - estatisticas$Desvio, 
-    x1 = bar_centers, 
-    y1 = estatisticas$Media + estatisticas$Desvio, 
-    angle = 90, 
-    code = 3, 
-    length = 0.1, 
-    col = "black"
-  )
+  # Adicionar barras de erro apenas quando o desvio padrão não é zero
+  for (i in 1:length(bar_centers)) {
+    if (estatisticas$Desvio[i] > 0) {
+      arrows(
+        x0 = bar_centers[i], 
+        y0 = estatisticas$Media[i] - estatisticas$Desvio[i], 
+        x1 = bar_centers[i], 
+        y1 = estatisticas$Media[i] + estatisticas$Desvio[i], 
+        angle = 90, 
+        code = 3, 
+        length = 0.1, 
+        col = "black"
+      )
+    }
+  }
+  
+  cat("\nGráfico gerado com sucesso em Rplots.pdf\n")
 } else {
   cat("Nenhum dado disponível para gerar o gráfico.\n")
   quit(status = 1)
