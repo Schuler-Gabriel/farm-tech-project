@@ -1,0 +1,67 @@
+# Function to check and install required packages
+install_if_missing <- function(packages) {
+  for (pkg in packages) {
+    tryCatch({
+      if (!require(pkg, character.only = TRUE, quietly = TRUE)) {
+        cat(sprintf("Installing package: %s\n", pkg))
+        install.packages(pkg, repos = "https://cloud.r-project.org/", quiet = TRUE)
+        if (!require(pkg, character.only = TRUE, quietly = TRUE)) {
+          stop(sprintf("Failed to install package: %s", pkg))
+        }
+      }
+    }, error = function(e) {
+      cat(sprintf("Error handling package %s: %s\n", pkg, e$message))
+    })
+  }
+}
+
+# Install and load required libraries
+install_if_missing(c("httr", "jsonlite"))
+
+# Function to get weather data for São Paulo
+get_weather_data <- function() {
+  base_url <- "https://api.open-meteo.com/v1/forecast"
+  
+  # Make the GET request for São Paulo coordinates
+  response <- GET(base_url, query = list(
+    latitude = -23.5583,
+    longitude = -46.6415,
+    hourly = "temperature_2m",
+    timezone = "America/Sao_Paulo"
+  ))
+  
+  if (status_code(response) == 200) {
+    weather_data <- fromJSON(content(response, "text", encoding = "UTF-8"))
+    return(weather_data)
+  } else {
+    stop("Erro ao obter os dados climáticos.")
+  }
+}
+
+# Main script
+tryCatch({
+  # Get weather data
+  weather_data <- get_weather_data()
+  
+  # Get current hour index (1-based in R)
+  current_hour <- as.numeric(format(Sys.time(), "%H")) + 1
+  
+  # Extract temperature and time for the current hour
+  current_temp <- weather_data$hourly$temperature_2m[current_hour]
+  current_time <- weather_data$hourly$time[current_hour]
+  
+  # Get min and max temperature for today
+  today_temps <- weather_data$hourly$temperature_2m[1:24]
+  min_temp <- min(today_temps)
+  max_temp <- max(today_temps)
+  
+  # Display weather information in the terminal
+  cat("\n===== Clima em São Paulo =====\n")
+  cat("Data e Hora:", format(as.POSIXct(current_time), "%d/%m/%Y %H:%M"), "\n")
+  cat("Temperatura Atual:", round(current_temp, 1), "°C\n")
+  cat("Temperatura Mínima Hoje:", round(min_temp, 1), "°C\n")
+  cat("Temperatura Máxima Hoje:", round(max_temp, 1), "°C\n")
+
+}, error = function(e) {
+  cat("Erro:", e$message, "\n")
+})
